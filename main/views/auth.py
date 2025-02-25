@@ -1,24 +1,12 @@
-from rest_framework import viewsets, mixins, filters, status
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.generics import RetrieveAPIView
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 
-from main import models, serializers
+import main.serializers as serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from django.utils.translation import gettext_lazy as _
-
-
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-class ReportViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    pass
 
 
 
@@ -34,6 +22,7 @@ class LoginView(APIView):
                     type=openapi.TYPE_OBJECT,
                     properties={
                         'token': openapi.Schema(type=openapi.TYPE_STRING, description="JWT token"),
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Success status")
                     }
                 )
             ),
@@ -46,9 +35,15 @@ class LoginView(APIView):
         serializer = serializers.LoginSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             user = serializer.validated_data['user']
-            refresh = RefreshToken.for_user(user)
+            refresh = AccessToken.for_user(user)
             return Response(
                 {
+                    "user": {
+                        "id": user.id,
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name
+                    },
                     "success": True,
                     "token": str(refresh)
                 },
@@ -87,7 +82,8 @@ class RegisterView(APIView):
                         'token': openapi.Schema(
                             type=openapi.TYPE_STRING,
                             description="JWT token"
-                        )
+                        ),
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Success status")
                     },
                     required=['user', 'token']
                 )
@@ -102,7 +98,7 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             # Generate refresh token for the created user
-            refresh = RefreshToken.for_user(user)
+            refresh = AccessToken.for_user(user)
             return Response(
                 {
                     "user": {

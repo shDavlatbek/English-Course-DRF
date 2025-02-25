@@ -37,8 +37,7 @@ USE_X_FORWARDED_HOST = True
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
-    'modeltranslation',
+    # 'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,6 +48,7 @@ INSTALLED_APPS = [
     'tinymce',
     'rest_framework',
     'rest_framework_simplejwt',
+    'nested_admin',
     'main',
     'drf_yasg',
 ]
@@ -118,18 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
-LANGUAGE_CODE = 'uz'
-
-LOCALE_PATHS = [
-    os.path.join(BASE_DIR, 'locale'),
-]
-
-LANGUAGES = [
-    ('uz', _('Uzbek')),
-    ('ru', _('Rus tili')),
-    ('en', _('Ingliz tili')),
-]
-
+LANGUAGE_CODE = 'en'
 
 TIME_ZONE = 'Asia/Tashkent'
 
@@ -198,7 +187,7 @@ TINYMCE_DEFAULT_CONFIG = {
     "fullscreen  preview save print | insertfile image media pageembed template link anchor codesample | "
     "a11ycheck ltr rtl | showcomments addcomment code",
     "custom_undo_redo_levels": 100,
-    "language": "uz_UZ",  # To force a specific language instead of the Django current language.
+    "language": "en",  # To force a specific language instead of the Django current language.
     "image_title": "true",
     "automatic_uploads": "true",
     "file_picker_types": "image",
@@ -236,42 +225,30 @@ TINYMCE_DEFAULT_CONFIG = {
 }
 
 JAZZMIN_SETTINGS = {
-     # title of the window (Will default to current_admin_site.site_title if absent or None)
     "site_title": _("Admin panel"),
 
-    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_header": _("Admin panel"),
 
-    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_brand": _("Admin panel"),
 
-    # Welcome text on the login screen
-    "welcome_sign": _("Admin panelga xush kelibsiz"),
+    "welcome_sign": _("Admin panel"),
 
-    # Copyright on the footer
-    "copyright": _("BON-Tech korporatsiyasi"),
+    "copyright": _("Course platform"),
 
-
-
-    # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
-    "order_with_respect_to": ["auth", "main", "main.MainSlide", "main.News", "main.Report", "main.Contact", "main.Station", "main.Wind", "main.Social"],
+    "order_with_respect_to": ["auth", "main", "main.Course", "main.Category"],
 
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
         "main": "fas fa-home",
-        "main.MainSlide": "fas fa-image",
-        "main.News": "fas fa-newspaper",
-        "main.Report": "fas fa-file-alt",
-        "main.Contact": "fas fa-phone",
-        "main.Station": "fas fa-map-marker-alt",
-        "main.Wind": "fas fa-wind",
+        "main.Course": "fas fa-book",
+        "main.Category": "fas fa-folder",
     },
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",
     "related_modal_active": True,
-    "changeform_format": "single",
+    # "changeform_format": "single",
     "language_chooser": True,
 }
 

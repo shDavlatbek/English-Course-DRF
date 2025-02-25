@@ -1,6 +1,56 @@
 from django.contrib import admin
-from modeltranslation.admin import TranslationAdmin
 from django.contrib.auth.admin import UserAdmin
 from main import models
-# Register your models here.
+import nested_admin
+
+
+
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ['title', 'category']
+    search_fields = ['title', 'category__name']
+    list_filter = ['category']
+    prepopulated_fields = {'slug': ('title',)}
+
+
+
+class CourseStackedInline(admin.StackedInline):
+    model = models.Course
+    extra = 0
+
+class OptionInline(nested_admin.NestedTabularInline):
+    model = models.Option
+    extra = 0
+
+class QuestionInline(nested_admin.NestedStackedInline):
+    model = models.Question
+    inlines = [OptionInline]
+    extra = 0
+
+class QuizInline(nested_admin.NestedStackedInline):
+    model = models.Quiz
+    inlines = [QuestionInline]
+    extra = 0
+    max_num = 1
+
+@admin.register(models.Course)
+class CourseAdmin(nested_admin.NestedModelAdmin):
+    inlines = [QuizInline]   
+    list_display = ('title', 'category',)
+    list_filter = ('category',)
+    search_fields = ('title', 'category__name',)
+    prepopulated_fields = {'slug': ('title',)}
+    
+    class Media:
+        js = ('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js',)
+
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    prepopulated_fields = {'slug': ('name',)}  
+
+
+
 admin.site.register(models.User, UserAdmin)
+admin.site.register(models.Category, CategoryAdmin)
+# admin.site.register(models.Course, CourseAdmin)

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import UserManager
 from django.contrib.auth.hashers import make_password
+from rest_framework.pagination import PageNumberPagination
 
 class CustomUserManager(UserManager):
     def _create_user(self, email, password, **extra_fields):
@@ -22,3 +23,10 @@ class CustomUserManager(UserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         return self._create_user(email, password, **extra_fields)
+
+
+
+class StandartPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
