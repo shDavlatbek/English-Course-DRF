@@ -192,34 +192,45 @@ TINYMCE_DEFAULT_CONFIG = {
     "image_title": "true",
     "automatic_uploads": "true",
     "file_picker_types": "image",
+    "relative_urls": False,
+    "remove_script_host": False,
+    "convert_urls": True,
+    
     "file_picker_callback": """
         function(cb, value, meta) {
             const input = document.createElement('input');
             input.setAttribute('type', 'file');
             input.setAttribute('accept', 'image/*');
-
+            
             input.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-
-            const reader = new FileReader();
-            reader.addEventListener('load', () => {
-                /*
-                Note: Now we need to register the blob in TinyMCEs image blob
-                registry. In the next release this part hopefully won't be
-                necessary, as we are looking to handle it internally.
-                */
-                const id = 'blobid' + (new Date()).getTime();
-                const blobCache =  tinymce.activeEditor.editorUpload.blobCache;
-                const base64 = reader.result.split(',')[1];
-                const blobInfo = blobCache.create(id, file, base64);
-                blobCache.add(blobInfo);
-
-                /* call the callback and populate the Title field with the file name */
-                cb(blobInfo.blobUri(), { title: file.name });
+                const file = e.target.files[0];
+                
+                // Create FormData object to send to server
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // Upload to server
+                fetch('/upload-image/', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'  // Include cookies/session info
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Use the URL returned from the server
+                    cb(data.location, { title: file.name });
+                })
+                .catch(error => {
+                    console.error('Error uploading file:', error);
+                    alert('Upload failed: ' + error.message);
+                });
             });
-            reader.readAsDataURL(file);
-            });
-
+            
             input.click();
         }
     """

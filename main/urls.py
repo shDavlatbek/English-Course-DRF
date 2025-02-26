@@ -17,6 +17,7 @@ schema_view = get_schema_view(
 router = routers.DefaultRouter()
 
 urlpatterns = [
+   path('upload-image/', views.upload_image, name='upload_image'),
    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
    path('login/', views.LoginView.as_view(), name='login'),
    path('register/', views.RegisterView.as_view(), name='register'),

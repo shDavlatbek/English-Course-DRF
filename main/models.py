@@ -1,4 +1,5 @@
 import os
+import uuid
 from django.db import models
 from django.urls import reverse
 from tinymce.models import HTMLField
@@ -110,3 +111,31 @@ class QuizResult(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.quiz.title} score: {self.score}"
+    
+    
+
+
+def get_image_path(instance, filename):
+    """Generate a unique path for uploaded images."""
+    ext = filename.split('.')[-1]
+    # Create a unique filename with uuid
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    # Return the upload path
+    return os.path.join('uploads', 'tinymce', filename)
+
+
+
+class TinyMCEImage(models.Model):
+    """Model to store images uploaded through TinyMCE."""
+    title = models.CharField(max_length=255, blank=True)
+    image = models.ImageField(upload_to=get_image_path)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.title or f"Image {self.id}"
+    
+    def save(self, *args, **kwargs):
+        # If no title is provided, use the original filename
+        if not self.title and self.image:
+            self.title = os.path.basename(self.image.name)
+        super().save(*args, **kwargs)
