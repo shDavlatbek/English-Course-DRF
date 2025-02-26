@@ -181,3 +181,23 @@ class CourseDetailView(generics.RetrieveAPIView):
     
     # Optional: Explicitly allow any user to access this view (matches original behavior)
     permission_classes = [AllowAny]
+    @swagger_auto_schema(    
+        operation_description="Retrieve detailed information about a course, including its quizzes, questions, options, and results.",
+        manual_parameters=[
+            openapi.Parameter(
+                'slug',
+                openapi.IN_PATH,
+                description="Course slug",
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                'Authorization',
+                openapi.IN_HEADER,
+                description="JWT token for authentication",
+                type=openapi.TYPE_STRING,
+                default='Bearer '
+            )
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)

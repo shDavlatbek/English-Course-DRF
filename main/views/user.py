@@ -55,3 +55,48 @@ class UserView(APIView):
         courses = Course.objects.filter(id__in=enrolled_courses)
         serializer = CourseSerializer(courses, many=True)
         return Response(serializer.data)
+    
+
+
+class UserMeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization',
+                openapi.IN_HEADER,
+                description="JWT token for authentication",
+                type=openapi.TYPE_STRING,
+                required=True,
+                default='Bearer '
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description="Details of the authenticated user",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="User ID"),
+                        'username': openapi.Schema(type=openapi.TYPE_STRING, description="Username"),
+                        'email': openapi.Schema(type=openapi.TYPE_STRING, description="Email"),
+                        'first_name': openapi.Schema(type=openapi.TYPE_STRING, description="First name"),
+                        'last_name': openapi.Schema(type=openapi.TYPE_STRING, description="Last name"),
+                    }
+                )
+            ),
+            401: openapi.Response(
+                description="Unauthorized: User is not authenticated"
+            )
+        }
+    )
+    def get(self, request):
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+        })
