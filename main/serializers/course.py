@@ -105,10 +105,23 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
-
+    result = serializers.SerializerMethodField()
     class Meta:
         model = Course
-        fields = ['id', 'title', 'slug', 'level', 'image', 'category', 'description',]
+        fields = ['id', 'title', 'slug', 'level', 'image', 'category', 'description', 'result']
+
+    def get_result(self, obj):
+        """
+        Retrieve the user's quiz result if they are authenticated.
+        """
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            quizzes = obj.quizzes.first()
+            quiz_result = quizzes.results.filter(user=request.user).first()
+            if quiz_result:
+                return QuizResultSerializer(quiz_result).data
+            return None
+        return None
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):

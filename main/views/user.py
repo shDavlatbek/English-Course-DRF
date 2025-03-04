@@ -42,7 +42,6 @@ class UserView(APIView):
                             'category': openapi.Schema(type=openapi.TYPE_STRING, description="Course category"),
                             'level': openapi.Schema(type=openapi.TYPE_STRING, description="Course level"),
                             'description': openapi.Schema(type=openapi.TYPE_STRING, description="Course description"),
-                            'content': openapi.Schema(type=openapi.TYPE_STRING, description="Course content"),
                         }
                     )
                 )
@@ -56,7 +55,7 @@ class UserView(APIView):
         user = request.user
         enrolled_courses = Enrollment.objects.filter(user=user).values_list('course', flat=True)
         courses = Course.objects.filter(id__in=enrolled_courses)
-        serializer = CourseSerializer(courses, many=True)
+        serializer = CourseSerializer(courses, context={'request': request},  many=True)
         return Response(serializer.data)
     
 
