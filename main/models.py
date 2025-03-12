@@ -19,11 +19,19 @@ LEVEL_CHOICES = (
 )
 
 
+class Group(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
 
 class User(AbstractUser):
     username = models.CharField(max_length=150, blank=True, null=True)  # make username optional
     email = models.EmailField(_('email address'), unique=True)
-    
+    group = models.ForeignKey(Group, on_delete=models.SET_NULL, related_name='users', null=True, blank=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 

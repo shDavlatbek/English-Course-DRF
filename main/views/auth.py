@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework import generics
 
 import main.serializers as serializers
 from drf_yasg.utils import swagger_auto_schema
@@ -59,57 +60,29 @@ class LoginView(APIView):
 
 
 
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
-    
+class RegisterView(generics.CreateAPIView):
+    serializer_class = serializers.RegisterSerializer
+
     @swagger_auto_schema(
+        operation_description="Register a new user",
         request_body=serializers.RegisterSerializer,
         responses={
             201: openapi.Response(
-                description="User registered successfully and JWT token generated",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'user': openapi.Schema(
-                            type=openapi.TYPE_OBJECT,
-                            properties={
-                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="User ID"),
-                                'email': openapi.Schema(type=openapi.TYPE_STRING, description="User email"),
-                                'first_name': openapi.Schema(type=openapi.TYPE_STRING, description="User first name"),
-                                'last_name': openapi.Schema(type=openapi.TYPE_STRING, description="User last name"),
-                            }
-                        ),
-                        'token': openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            description="JWT token"
-                        ),
-                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Success status")
-                    },
-                    required=['user', 'token']
-                )
+                description="User registered successfully",
+                schema=serializers.RegisterSerializer
             ),
             400: openapi.Response(
                 description="Bad Request: Invalid input data"
             )
         }
     )
-    def post(self, request):
-        serializer = serializers.RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            # Generate refresh token for the created user
-            refresh = AccessToken.for_user(user)
-            return Response(
-                {
-                    "user": {
-                        "id": user.id,
-                        "email": user.email,
-                        "first_name": user.first_name,
-                        "last_name": user.last_name
-                    },
-                    "token": str(refresh),
-                    "success": True
-                },
-                status=status.HTTP_201_CREATED
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(
+            {
+                "user": serializers.RegisterSerializer(user, context=self.get_serializer_context()).data,
+                "message": "User Created Successfully.  Now perform Login to get your token",
+            }
+        )

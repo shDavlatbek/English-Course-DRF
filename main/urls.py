@@ -3,6 +3,7 @@ from main import views
 from rest_framework import routers
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from main.views import GroupListView
 
 
 schema_view = get_schema_view(
@@ -29,5 +30,7 @@ urlpatterns = [
    path('course/', views.CourseView.as_view(), name='course-list'),
    path('course/<slug:slug>/', views.CourseDetailView.as_view(), name='course-detail'),
    path('course/<slug:slug>/submit-quiz', views.ProcessQuizResultView.as_view(), name='submit-quiz'),
+   path('groups/', GroupListView.as_view(), name='group-list'),
+   path('quote/', views.quotes, name='quote'),
    path('', include(router.urls)),
 ]
