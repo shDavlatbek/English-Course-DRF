@@ -146,9 +146,10 @@ class CourseSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             quizzes = obj.quizzes.first()
-            quiz_result = quizzes.results.filter(user=request.user).first()
-            if quiz_result:
-                return QuizResultSerializer(quiz_result).data
+            if quizzes:
+                quiz_result = quizzes.results.filter(user=request.user).first()
+                if quiz_result:
+                    return QuizResultSerializer(quiz_result).data
             return None
         return None
 
