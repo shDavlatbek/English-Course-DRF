@@ -101,6 +101,25 @@ class Option(models.Model):
 
 
 
+class FillInBlankQuestion(models.Model):
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='fill_blank_questions')
+    text_before = models.CharField(max_length=500)  # Text before the blank
+    text_after = models.CharField(max_length=500, blank=True, null=True)  # Text after the blank
+    correct_answer = models.CharField(max_length=100)  # Correct option (e.g., "both", "either", "neither")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.text_before} _____ {self.text_after or ''}"
+
+
+class FillInBlankOption(models.Model):
+    question = models.ForeignKey(FillInBlankQuestion, on_delete=models.CASCADE, related_name='options')
+    text = models.CharField(max_length=100)  # Option text like "both", "either", "neither"
+    
+    def __str__(self):
+        return self.text
+
+
 class QuizResult(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quiz_results')
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='results')
