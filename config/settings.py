@@ -28,9 +28,32 @@ SECRET_KEY = 'django-insecure-tdt##wrfc**%si0inx&!y1j5bj2vy8)il*1+213g9i*d=3_ie7
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-CSRF_TRUSTED_ORIGINS = ["https://api.linguabloom.uz/", "http://api.linguabloom.uz/"]
+CSRF_TRUSTED_ORIGINS = ["https://api.linguabloom.uz", "http://api.linguabloom.uz"]
+CORS_ALLOWED_ORIGINS_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
