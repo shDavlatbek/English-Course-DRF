@@ -44,13 +44,36 @@ class CourseAdmin(nested_admin.NestedModelAdmin):
         js = ('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js',)
 
 
+class EnrollmentInline(admin.StackedInline):
+    model = models.Enrollment
+    extra = 0
+
+class QuizResultInline(admin.StackedInline):
+    model = models.QuizResult
+    extra = 0
+
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name']
     prepopulated_fields = {'slug': ('name',)}  
 
 
+class UserCustomAdmin(UserAdmin):
+    inlines = [EnrollmentInline, QuizResultInline]
 
-admin.site.register(models.User, UserAdmin)
+
+admin.site.register(models.User, UserCustomAdmin)
 admin.site.register(models.Category, CategoryAdmin)
 # admin.site.register(models.Course, CourseAdmin)
+
+# Register FillInBlankOption as inline for FillInBlankQuestion
+class FillInBlankOptionInline(admin.TabularInline):
+    model = models.FillInBlankOption
+    extra = 3
+
+@admin.register(models.FillInBlankQuestion)
+class FillInBlankQuestionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'quiz', 'text_before', 'text_after', 'correct_answer', 'created_at')
+    list_filter = ('quiz', 'created_at')
+    search_fields = ('text_before', 'text_after', 'correct_answer')
+    inlines = [FillInBlankOptionInline]

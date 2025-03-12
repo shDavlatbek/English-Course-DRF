@@ -1,9 +1,10 @@
 from rest_framework import serializers
-from main.models import Category, Quiz, Question, Option, QuizResult, Course
+from main.models import Category, Quiz, Question, Option, QuizResult, Course, FillInBlankQuestion, FillInBlankOption
 
 class AnswerSerializer(serializers.Serializer):
     question = serializers.IntegerField()
     option = serializers.IntegerField()
+    question_type = serializers.CharField(default='multiple_choice')  # 'multiple_choice' or 'fill_blank'
 
 class QuizResultProcessSerializer(serializers.Serializer):
     quiz = serializers.PrimaryKeyRelatedField(queryset=Quiz.objects.all())
@@ -14,34 +15,47 @@ class QuizResultProcessSerializer(serializers.Serializer):
         quiz = validated_data['quiz']
         answers = validated_data['answers']
 
-        total_questions = quiz.questions.count()
+        total_questions = (quiz.questions.count() + 
+                          quiz.fill_blank_questions.count())
         correct_count = 0
 
         # Process each answer
         for answer in answers:
-            # Ensure the question is part of the quiz
-            try:
-                question = quiz.questions.get(pk=answer['question'])
-            except Question.DoesNotExist:
-                raise serializers.ValidationError(
-                    f"Question id {answer['question']} is not part of the quiz."
-                )
-
-            # Ensure the option is valid for this question
-            try:
-                option = question.options.get(pk=answer['option'])
-            except Option.DoesNotExist:
-                raise serializers.ValidationError(
-                    f"Option id {answer['option']} is not valid for question id {question.id}."
-                )
-
-            if option.is_correct:
-                correct_count += 1
+            question_type = answer.get('question_type', 'multiple_choice')
+            
+            if question_type == 'multiple_choice':
+                # Handle regular multiple choice questions
+                try:
+                    question = quiz.questions.get(pk=answer['question'])
+                    option = question.options.get(pk=answer['option'])
+                    if option.is_correct:
+                        correct_count += 1
+                except (Question.DoesNotExist, Option.DoesNotExist):
+                    raise serializers.ValidationError(
+                        f"Invalid question or option ID for multiple choice question."
+                    )
+            
+            elif question_type == 'fill_blank':
+                # Handle fill-in-the-blank questions
+                try:
+                    question = quiz.fill_blank_questions.get(pk=answer['question'])
+                    option = question.options.get(pk=answer['option'])
+                    if option.text == question.correct_answer:
+                        correct_count += 1
+                except (FillInBlankQuestion.DoesNotExist, FillInBlankOption.DoesNotExist):
+                    raise serializers.ValidationError(
+                        f"Invalid question or option ID for fill-in-blank question."
+                    )
 
         # Calculate score as a percentage
         score = (correct_count / total_questions) * 100 if total_questions > 0 else 0
 
-        quiz_result = QuizResult.objects.create(user=user, quiz=quiz, score=score, correct_answers=correct_count)
+        quiz_result = QuizResult.objects.create(
+            user=user, 
+            quiz=quiz, 
+            score=score, 
+            correct_answers=correct_count
+        )
         return quiz_result
 
 
@@ -50,6 +64,20 @@ class OptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Option
         fields = ['id', 'text', 'is_correct']
+
+
+class FillInBlankOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FillInBlankOption
+        fields = ['id', 'text']
+
+
+class FillInBlankQuestionSerializer(serializers.ModelSerializer):
+    options = FillInBlankOptionSerializer(many=True)
+    
+    class Meta:
+        model = FillInBlankQuestion
+        fields = ['id', 'text_before', 'text_after', 'options']
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -68,12 +96,13 @@ class QuizResultSerializer(serializers.ModelSerializer):
 
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True)
+    fill_blank_questions = FillInBlankQuestionSerializer(many=True)
     result = serializers.SerializerMethodField()
     is_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = Quiz
-        fields = ('id', 'title', 'description', 'created_at', 'result', 'is_completed', 'questions')
+        fields = ('id', 'title', 'description', 'created_at', 'result', 'is_completed', 'questions', 'fill_blank_questions')
 
     def get_result(self, obj):
         """
